@@ -1,18 +1,31 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 
+client.commands = new Discord.Collection();
+const fs = require('fs');
+const commandFiles = fs.readdirSync('./commands/').filter(file => file.endsWith('.js'))
+for(const file of commandFiles){
+    const command = require(`./commands/${file}`)
+    client.commands.set(command.name, command) 
+}
+
+const { prefix, token } = require('./config.json')
+
 client.once('ready', () => {
     console.log('Ready.')
 })
 
 client.on('message', message => {
-	console.log(message.content); //If You Dont Want The Messages In Console Then Remove This Line, This Will Log Messages In Console
-  
-  if (message.content === 'ping') {
-	message.channel.send('Pong!'); //message.reply('Pong!'); Also If You Want The BOT To Ping The Person Who Used The Command
-} 
-  if (message.content === 'youtube') {
-	message.channel.send('https://youtube.com/techtipcyber'); //message.reply('https://youtube.com/techtipcyber'); Also If You Want The BOT To Ping The Person Who Used The Command
-} 
+    if(!message.content.startsWith(prefix)||message.author.bot) return
 
-});
+    const args = message.content.slice(prefix.length).split(/ +/)
+    const command = args.shift().toLowerCase()
+
+    if(command === 'ping'){
+        client.commands.get('ping').execute(message, args)
+    } else if(command === 'yt'){
+        client.commands.get('yt').execute(message, args)
+    }
+})
+
+client.login(token)
